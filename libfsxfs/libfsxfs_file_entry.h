@@ -320,16 +320,12 @@ int libfsxfs_file_entry_get_sub_file_entry_by_index(
 LIBFSXFS_EXTERN \
 int libfsxfs_file_entry_get_sub_file_entry_by_utf8_name(
      libfsxfs_file_entry_t *file_entry,
-     const uint8_t *utf8_string,
-     size_t utf8_string_length,
      libfsxfs_file_entry_t **sub_file_entry,
      libcerror_error_t **error );
 
 LIBFSXFS_EXTERN \
 int libfsxfs_file_entry_get_sub_file_entry_by_utf16_name(
      libfsxfs_file_entry_t *file_entry,
-     const uint16_t *utf16_string,
-     size_t utf16_string_length,
      libfsxfs_file_entry_t **sub_file_entry,
      libcerror_error_t **error );
 

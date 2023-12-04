@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DBGLib|Win32">
+      <Configuration>DBGLib</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="VSDebug|Win32">
+      <Configuration>VSDebug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{D08D760C-C2AD-4FF4-8C1C-CA8350B16026}</ProjectGuid>
+    <RootNamespace>libfsxfs</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DBGLib|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DBGLib|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>17.0.34322.80</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DBGLib|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcerror;..\..\libcthreads;..\..\libcdata;..\..\libclocale;..\..\libcnotify;..\..\libcsplit;..\..\libuna;..\..\libcfile;..\..\libcpath;..\..\libbfio;..\..\libfcache;..\..\libfdata;..\..\libfdatetime;..\..\libfguid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBBFIO;HAVE_LOCAL_LIBFCACHE;HAVE_LOCAL_LIBFDATA;HAVE_LOCAL_LIBFDATETIME;HAVE_LOCAL_LIBFGUID;LIBFSXFS_DLL_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level4</WarningLevel>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(OutDir)$(ProjectName).dll</OutputFile>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ImportLibrary>$(OutDir)$(ProjectName).lib</ImportLibrary>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcerror;..\..\libcthreads;..\..\libcdata;..\..\libclocale;..\..\libcnotify;..\..\libcsplit;..\..\libuna;..\..\libcfile;..\..\libcpath;..\..\libbfio;..\..\libfcache;..\..\libfdata;..\..\libfdatetime;..\..\libfguid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBBFIO;HAVE_LOCAL_LIBFCACHE;HAVE_LOCAL_LIBFDATA;HAVE_LOCAL_LIBFDATETIME;HAVE_LOCAL_LIBFGUID;LIBFSXFS_DLL_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <SmallerTypeCheck>true</SmallerTypeCheck>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(OutDir)$(ProjectName).dll</OutputFile>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ImportLibrary>$(OutDir)$(ProjectName).lib</ImportLibrary>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DBGLib|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcerror;..\..\libcthreads;..\..\libcdata;..\..\libclocale;..\..\libcnotify;..\..\libcsplit;..\..\libuna;..\..\libcfile;..\..\libcpath;..\..\libbfio;..\..\libfcache;..\..\libfdata;..\..\libfdatetime;..\..\libfguid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBBFIO;HAVE_LOCAL_LIBFCACHE;HAVE_LOCAL_LIBFDATA;HAVE_LOCAL_LIBFDATETIME;HAVE_LOCAL_LIBFGUID;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <SmallerTypeCheck>true</SmallerTypeCheck>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(OutDir)$(ProjectName).dll</OutputFile>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ImportLibrary>$(OutDir)$(ProjectName).lib</ImportLibrary>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\libfsxfs\libfsxfs.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_attributes.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_attributes_leaf_block_header.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_attributes_table.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_attributes_table_header.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_attribute_values.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_block_data_handle.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_block_directory.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_block_directory_footer.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_block_directory_header.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_btree_block.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_btree_header.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_buffer_data_handle.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_data_stream.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_debug.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_directory.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_directory_entry.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_directory_table.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_directory_table_header.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_error.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_extended_attribute.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_extent.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_extents.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_extent_btree.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_extent_list.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_file_entry.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_file_system.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_file_system_block.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_file_system_block_header.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_inode.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_inode_btree.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_inode_btree_record.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_inode_information.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_io_handle.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_notify.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_superblock.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_support.c" />
+    <ClCompile Include="..\..\libfsxfs\libfsxfs_volume.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\libfsxfs\fsxfs_attributes.h" />
+    <ClInclude Include="..\..\libfsxfs\fsxfs_attributes_block.h" />
+    <ClInclude Include="..\..\libfsxfs\fsxfs_block_directory.h" />
+    <ClInclude Include="..\..\libfsxfs\fsxfs_btree.h" />
+    <ClInclude Include="..\..\libfsxfs\fsxfs_file_system_block.h" />
+    <ClInclude Include="..\..\libfsxfs\fsxfs_inode.h" />
+    <ClInclude Include="..\..\libfsxfs\fsxfs_inode_information.h" />
+    <ClInclude Include="..\..\libfsxfs\fsxfs_superblock.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_attributes.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_attributes_leaf_block_header.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_attributes_table.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_attributes_table_header.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_attribute_values.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_block_data_handle.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_block_directory.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_block_directory_footer.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_block_directory_header.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_btree_block.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_btree_header.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_buffer_data_handle.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_data_stream.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_debug.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_definitions.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_directory.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_directory_entry.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_directory_table.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_directory_table_header.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_error.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_extended_attribute.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_extent.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_extents.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_extent_btree.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_extent_list.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_extern.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_file_entry.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_file_system.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_file_system_block.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_file_system_block_header.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_inode.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_inode_btree.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_inode_btree_record.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_inode_information.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_io_handle.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_libbfio.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_libcdata.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_libcerror.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_libclocale.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_libcnotify.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_libcthreads.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_libfcache.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_libfdata.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_libfdatetime.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_libfguid.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_libuna.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_notify.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_superblock.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_support.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_types.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_unused.h" />
+    <ClInclude Include="..\..\libfsxfs\libfsxfs_volume.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\libfsxfs\libfsxfs.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libbfio\libbfio.vcxproj">
+      <Project>{b37a300f-a358-4f51-ab0a-4cf59d816af8}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcdata\libcdata.vcxproj">
+      <Project>{477ce4b7-19db-4194-8495-d68ef58d2927}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcerror\libcerror.vcxproj">
+      <Project>{5a9eda97-a2f9-4d3a-bb8c-6560d18b6281}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcfile\libcfile.vcxproj">
+      <Project>{58a928a2-b52b-40f3-a28b-11604f3dd2c3}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libclocale\libclocale.vcxproj">
+      <Project>{ddec82cd-0a77-49bb-83d8-14991cc4a182}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcnotify\libcnotify.vcxproj">
+      <Project>{8f5e73ee-f2c4-4d40-acfc-1c5db56a2959}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcpath\libcpath.vcxproj">
+      <Project>{fb69dfd6-0ac0-46cc-992c-4e23766962a9}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcsplit\libcsplit.vcxproj">
+      <Project>{ceaf29ec-2ab8-4e30-8d81-1759192b5840}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcthreads\libcthreads.vcxproj">
+      <Project>{36c86d9b-b02a-433b-8579-a4610435ea96}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libfcache\libfcache.vcxproj">
+      <Project>{2fa1e8a8-66af-4cc5-81c5-402298ad44d4}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libfdata\libfdata.vcxproj">
+      <Project>{c6b5dde6-c5ce-4ac9-b581-65239ccc91e3}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libfdatetime\libfdatetime.vcxproj">
+      <Project>{2887e62c-25b8-4c1b-b106-8adaacbe03b2}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libfguid\libfguid.vcxproj">
+      <Project>{24e02179-cc59-4d43-90af-d5d9e3a3365c}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libuna\libuna.vcxproj">
+      <Project>{a5f49372-22e4-48f6-a408-9b6f0db8f48a}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

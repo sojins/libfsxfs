@@ -178,3 +178,9 @@ stamp-h[1-9]
 /libfguid
 /libhmac
 /libuna
+
+.vs
+DBGLib
+VSDebug
+Release
+*.user

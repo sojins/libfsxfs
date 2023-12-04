@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DBGLib|Win32">
+      <Configuration>DBGLib</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="VSDebug|Win32">
+      <Configuration>VSDebug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{B37A300F-A358-4F51-AB0A-4CF59D816AF8}</ProjectGuid>
+    <RootNamespace>libbfio</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DBGLib|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DBGLib|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>17.0.34322.80</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DBGLib|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcerror;..\..\libcthreads;..\..\libclocale;..\..\libcnotify;..\..\libcdata;..\..\libcsplit;..\..\libcfile;..\..\libcpath;..\..\libuna;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBBFIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level4</WarningLevel>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
+      <ModuleDefinitionFile />
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcerror;..\..\libcthreads;..\..\libclocale;..\..\libcnotify;..\..\libcdata;..\..\libcsplit;..\..\libcfile;..\..\libcpath;..\..\libuna;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBBFIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <SmallerTypeCheck>true</SmallerTypeCheck>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
+      <ModuleDefinitionFile />
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DBGLib|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcerror;..\..\libcthreads;..\..\libclocale;..\..\libcnotify;..\..\libcdata;..\..\libcsplit;..\..\libcfile;..\..\libcpath;..\..\libuna;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBBFIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <SmallerTypeCheck>true</SmallerTypeCheck>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\libbfio\libbfio_error.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_file.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_file_io_handle.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_file_pool.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_file_range.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_file_range_io_handle.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_handle.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_memory_range.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_memory_range_io_handle.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_pool.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_support.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_system_string.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\libbfio\libbfio_codepage.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_definitions.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_error.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_extern.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_file.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_file_io_handle.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_file_pool.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_file_range.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_file_range_io_handle.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_handle.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_libcdata.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_libcerror.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_libcfile.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_libclocale.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_libcpath.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_libcthreads.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_libuna.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_memory_range.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_memory_range_io_handle.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_pool.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_support.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_system_string.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_types.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_unused.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libcdata\libcdata.vcxproj">
+      <Project>{477ce4b7-19db-4194-8495-d68ef58d2927}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcerror\libcerror.vcxproj">
+      <Project>{5a9eda97-a2f9-4d3a-bb8c-6560d18b6281}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcfile\libcfile.vcxproj">
+      <Project>{58a928a2-b52b-40f3-a28b-11604f3dd2c3}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libclocale\libclocale.vcxproj">
+      <Project>{ddec82cd-0a77-49bb-83d8-14991cc4a182}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcnotify\libcnotify.vcxproj">
+      <Project>{8f5e73ee-f2c4-4d40-acfc-1c5db56a2959}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcpath\libcpath.vcxproj">
+      <Project>{fb69dfd6-0ac0-46cc-992c-4e23766962a9}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcsplit\libcsplit.vcxproj">
+      <Project>{ceaf29ec-2ab8-4e30-8d81-1759192b5840}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libcthreads\libcthreads.vcxproj">
+      <Project>{36c86d9b-b02a-433b-8579-a4610435ea96}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libuna\libuna.vcxproj">
+      <Project>{a5f49372-22e4-48f6-a408-9b6f0db8f48a}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

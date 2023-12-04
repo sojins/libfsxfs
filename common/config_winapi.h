@@ -89,6 +89,13 @@
 #define HAVE_MULTI_THREAD_SUPPORT	1
 #endif
 
+
+
+#define HAVE_VERBOSE_OUTPUT     1
+#define HAVE_DEBUG_OUTPUT       1
+
+
+
 #endif /* defined( WINAPI ) */
 
 #endif /* !defined( _CONFIG_WINAPI_H ) */
