@@ -182,5 +182,6 @@ stamp-h[1-9]
 .vs
 DBGLib
 VSDebug
-Release
+*Release/
 *.user
+bin/
