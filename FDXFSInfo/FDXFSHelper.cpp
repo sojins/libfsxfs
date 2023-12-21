@@ -2,6 +2,9 @@
 
 #include <system_string.h>
 #include <libfsxfs.h>
+#include <sstream>
+
+FDXFSHelper* FDXFSHelper::m_pInstance = NULL;
 
 FDXFSHelper::FDXFSHelper()
 {
@@ -16,6 +19,49 @@ FDXFSHelper::~FDXFSHelper()
 {
 	if (m_pXfsInfoHandle != NULL)
 		delete m_pXfsInfoHandle;
+
+	for (XFSBlockDevInfo::iterator it = m_block_dev.begin(); it != m_block_dev.end(); it++) {
+		xfs_fs* b = it->second;
+		if (b) {
+			//FD_EXT4::umount(it->first.c_str());
+		}
+	}
+	m_block_dev.clear();
+}
+
+BOOL FDXFSHelper::Mount(CVirtualDrive* pVdrive, const char* mount_point)
+{
+	const char* mp = m_mountpoint.c_str();
+	if (mount_point)
+		mp = mount_point;
+
+	std::stringstream ss;
+	ss << mount_point;
+	if (m_block_dev.size() > 0) {
+		XFSBlockDevInfo::iterator it = m_block_dev.find(mount_point);
+		if (it != m_block_dev.end()) {
+			ss << "#";
+			ss << m_block_dev.size();
+
+			//char* pVolumeLabel = pVdrive->partitionInfo.volume_label;
+			//sprintf(pVolumeLabel, ss.str().c_str());
+		}
+	}
+	m_mountpoint = "/" + ss.str() + "/";
+
+	//struct ext4_blockdev* bdev = FD_EXT4::open_blockdev(ss.str().c_str(), pVdrive);
+	//if (FD_EXT4::mount(bdev, &m_bc, m_mountpoint.c_str())) {
+	//	xfs_fs* fs = new xfs_fs;
+	//	ext4_get_fs(m_mountpoint.c_str(), fs);
+	//	m_block_dev.insert(std::make_pair(ss.str(), fs));
+	//	return TRUE;
+	//}
+	return FALSE;
+}
+
+BOOL FDXFSHelper::IsMounted()
+{
+	return m_block_dev.size() > 0;
 }
 
 BOOL FDXFSHelper::Initialize()
@@ -23,7 +69,7 @@ BOOL FDXFSHelper::Initialize()
 	size_t string_length = 0;
 	m_pXfsInfoHandle = new FDXFSInfoHandle();
 
-	libfsxfs_notify_set_stream(stderr,NULL);
+	libfsxfs_notify_set_stream(stderr, NULL);
 	libfsxfs_notify_set_verbose(0);
 	try {
 		if (m_pXfsInfoHandle->Initialize() != 1)
@@ -82,6 +128,15 @@ void FDXFSHelper::Close()
 	}
 }
 
+int FDXFSHelper::TestVolume()
+{
+	info_handle_t* info_handle = m_pXfsInfoHandle->GetInfoHandle();
+	if (info_handle == NULL)
+		throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid info handle.");
+	m_pXfsInfoHandle->Volume_fprint();
+	return 1;
+}
+
 int FDXFSHelper::DirTest()
 {
 	libfsxfs_file_entry_t* file_entry = NULL;
@@ -118,40 +173,24 @@ int FDXFSHelper::DirTest()
 		return(1);
 	}
 	catch (FDXFSException& e) {
-		LIBCERROR_ERROR_DOMAINS err = LIBCERROR_ERROR_DOMAIN_ARGUMENTS;
+		LIBCERROR_ERROR_DOMAINS err_domain = LIBCERROR_ERROR_DOMAIN_ARGUMENTS;
 		if (typeid(e) == typeid(FDRuntimeException)) {
-			err = LIBCERROR_ERROR_DOMAIN_RUNTIME;
+			err_domain = LIBCERROR_ERROR_DOMAIN_RUNTIME;
 		}
 		else if (typeid(e) == typeid(FDMemoryException)) {
-			err = LIBCERROR_ERROR_DOMAIN_MEMORY;
+			err_domain = LIBCERROR_ERROR_DOMAIN_MEMORY;
 		}
 		else if (typeid(e) == typeid(FDConversionException)) {
-			err = LIBCERROR_ERROR_DOMAIN_CONVERSION;
+			err_domain = LIBCERROR_ERROR_DOMAIN_CONVERSION;
 		}
 
 		libcerror_error_set(
 			error,
-			err,
+			err_domain,
 			e.code(),
 			"%s: %s",
 			function, e.what());
 	}
-	/*catch (FDArgumentException& e) {
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			e.code(),
-			"%s: %s",
-			function, e.what());
-	}
-	catch (FDRuntimeException& e) {
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			e.code(),
-			"%s: %s",
-			function, e.what());
-	}*/
 
 	if (file_entry != NULL)
 	{
@@ -160,4 +199,9 @@ int FDXFSHelper::DirTest()
 			NULL);
 	}
 	return(-1);
+}
+
+FDXFSHelper* GetXFSHelper()
+{
+	return FDXFSHelper::getInstance();
 }

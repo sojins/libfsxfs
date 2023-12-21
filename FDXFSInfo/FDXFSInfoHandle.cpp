@@ -33,6 +33,7 @@
 #include "../libfsxfs/libfsxfs_volume.h"
 
 #include <sstream>
+#include "FDXFSFileDev.h"
 
 #define DIGEST_HASH_STRING_SIZE_MD5	33
 #define INFO_HANDLE_NOTIFY_STREAM	stdout
@@ -47,10 +48,39 @@ FDXFSInfoHandle::~FDXFSInfoHandle()
 {
 }
 
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+#define copyToUtf16 libuna_unicode_character_copy_to_utf16
+#define copyFromUtf16 libuna_unicode_character_copy_from_utf16
+#define XFSGetName libfsxfs_file_entry_get_utf16_name
+#define XFSGetNameLength libfsxfs_file_entry_get_utf16_name_size
+#define copyPosixTimeToUtf16 libfdatetime_posix_time_copy_to_utf16_string
+#define getSymbolicLinkTarget libfsxfs_file_entry_get_utf16_symbolic_link_target
+#define getSymbolicLinkTargetSize libfsxfs_file_entry_get_utf16_symbolic_link_target_size
+#define getAttributeNameSize libfsxfs_extended_attribute_get_utf16_name_size
+#define getAttributeName libfsxfs_extended_attribute_get_utf16_name
+#define getFileEntryPath libfsxfs_volume_get_file_entry_by_utf16_path
+#define getLabelSize libfsxfs_volume_get_utf16_label_size
+#define getLabel libfsxfs_volume_get_utf16_label
+#else
+#define copyToUtf16 libuna_unicode_character_copy_to_utf8
+#define copyFromUtf16 libuna_unicode_character_copy_from_utf8
+#define XFSGetName libfsxfs_file_entry_get_utf8_name
+#define XFSGetNameLength libfsxfs_file_entry_get_utf8_name_size
+#define copyPosixTimeToUtf16 libfdatetime_posix_time_copy_to_utf8_string
+#define getSymbolicLinkTarget libfsxfs_file_entry_get_utf8_symbolic_link_target
+#define getSymbolicLinkTargetSize libfsxfs_file_entry_get_utf8_symbolic_link_target_size
+#define getAttributeNameSize libfsxfs_extended_attribute_get_utf8_name_size
+#define getAttributeName libfsxfs_extended_attribute_get_utf8_name
+#define getFileEntryPath libfsxfs_volume_get_file_entry_by_utf8_path
+#define getLabelSize libfsxfs_volume_get_utf8_label_size
+#define getLabel libfsxfs_volume_get_utf8_label
+#endif
+
+
 /* Copies a string of a decimal value to a 64-bit value
  * Returns 1 if successful or -1 on error
  */
-int FDXFSInfoHandle::SystemStringCopyFrom64bitInDecimal(
+int FDXFSInfoHandle::CopyFrom64bitInDecimal(
 	const system_character_t* string,
 	size_t string_size,
 	uint64_t* value_64bit)
@@ -185,8 +215,18 @@ int FDXFSInfoHandle::Initialize()
 		if (memory_set(*info_handle, 0, sizeof(info_handle_t)) == NULL)
 			throw FDMemoryException(LIBCERROR_MEMORY_ERROR_SET_FAILED, "unable to clear info handle.");
 
-		if (libbfio_file_range_initialize(&((*info_handle)->input_file_io_handle), error) != 1)
-			throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED, "unable to initialize input file IO handle.");
+#if 1
+		xfs_blockdev* bd = FD_XFS::open_blockdev("xfs_mp", NULL);
+		if (bd) {
+			(*info_handle)->input_file_io_handle = bd->handle;
+		}
+		//if (FD_XFS::file_dev_initialize(&((*info_handle)->input_file_io_handle), error) != 1)
+		//	throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED, "unable to initialize input file IO handle.");
+#else
+		libbfio_handle_t* handle = (libbfio_handle_t*)((*info_handle)->input_file_io_handle);
+		if (libbfio_file_range_initialize(&handle, error) != 1)
+			throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED, "unable to initialize input file IO handle.");		
+#endif
 
 		(*info_handle)->calculate_md5 = calculate_md5;
 		(*info_handle)->notify_stream = INFO_HANDLE_NOTIFY_STREAM;
@@ -222,9 +262,9 @@ int FDXFSInfoHandle::Initialize()
 	{
 		if ((*info_handle)->input_file_io_handle != NULL)
 		{
-			libbfio_handle_free(
-				&((*info_handle)->input_file_io_handle),
-				NULL);
+			//libbfio_handle_free(
+			//	&((*info_handle)->input_file_io_handle),
+			//	NULL);
 		}
 		SAFE_FREE(*info_handle);
 	}
@@ -260,8 +300,8 @@ int FDXFSInfoHandle::Finalize()
 					throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED, "unable to free input volume.");
 			}
 
-			if (libbfio_handle_free(&((*info_handle)->input_file_io_handle), error) != 1)
-				throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED, "unable to free input file IO handle.");
+			//if (libbfio_handle_free(&((*info_handle)->input_file_io_handle), error) != 1)
+			//	throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED, "unable to free input file IO handle.");
 
 			SAFE_FREE(info_handle);
 		}
@@ -293,43 +333,43 @@ int FDXFSInfoHandle::Finalize()
 /* Signals the info handle to abort
  * Returns 1 if successful or -1 on error
  */
-int FDXFSInfoHandle::SignalAbort()
-{
-	static const char* function = "info_handle_signal_abort";
-	info_handle_t* info_handle = m_pInfoHandle;
-	libcerror_error_t** error = &m_pError;
-	try {
-		if (info_handle == NULL)
-			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid info handle.");
-
-		info_handle->abort = 1;
-
-		if (info_handle->input_volume != NULL)
-		{
-			if (libfsxfs_volume_signal_abort(info_handle->input_volume, error) != 1)
-				throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_SET_FAILED, "unable to signal input volume to abort.");
-		}
-		return 1;
-	}
-	catch (FDArgumentException& e) {
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			e.code(),
-			"%s: %s",
-			function, e.what());
-	}
-	catch (FDRuntimeException& e) {
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			e.code(),
-			"%s: %s",
-			function, e.what());
-	}
-
-	return(-1);
-}
+//int FDXFSInfoHandle::SignalAbort()
+//{
+//	static const char* function = "info_handle_signal_abort";
+//	info_handle_t* info_handle = m_pInfoHandle;
+//	libcerror_error_t** error = &m_pError;
+//	try {
+//		if (info_handle == NULL)
+//			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid info handle.");
+//
+//		info_handle->abort = 1;
+//
+//		if (info_handle->input_volume != NULL)
+//		{
+//			if (libfsxfs_volume_signal_abort(info_handle->input_volume, error) != 1)
+//				throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_SET_FAILED, "unable to signal input volume to abort.");
+//		}
+//		return 1;
+//	}
+//	catch (FDArgumentException& e) {
+//		libcerror_error_set(
+//			error,
+//			LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+//			e.code(),
+//			"%s: %s",
+//			function, e.what());
+//	}
+//	catch (FDRuntimeException& e) {
+//		libcerror_error_set(
+//			error,
+//			LIBCERROR_ERROR_DOMAIN_RUNTIME,
+//			e.code(),
+//			"%s: %s",
+//			function, e.what());
+//	}
+//
+//	return(-1);
+//}
 
 /* Sets the bodyfile
  * Returns 1 if successful or -1 on error
@@ -413,45 +453,55 @@ int FDXFSInfoHandle::SignalAbort()
 /* Sets the volume offset
  * Returns 1 if successful or -1 on error
  */
-int FDXFSInfoHandle::SetVolumeOffset(const system_character_t* string)
+//int FDXFSInfoHandle::SetVolumeOffset(const system_character_t* string)
+//{
+//	static const char* function = "info_handle_set_volume_offset";
+//	size_t string_length = 0;
+//	uint64_t value_64bit = 0;
+//	info_handle_t* info_handle = m_pInfoHandle;
+//	libcerror_error_t** error = &m_pError;
+//
+//	if (info_handle == NULL)
+//		throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid info handle.");
+//
+//	string_length = system_string_length(
+//		string);
+//
+//	if (CopyFrom64bitInDecimal(string, string_length + 1, &value_64bit) != 1)
+//		throw FDArgumentException(LIBCERROR_RUNTIME_ERROR_COPY_FAILED, "unable to copy string to 64-bit decimal.");
+//
+//	info_handle->volume_offset = (off64_t)value_64bit;
+//
+//	return(1);
+//}
+
+/* Opens the input
+ * Returns 1 if successful or -1 on error
+ */
+void FDXFSInfoHandle::Mount(const system_character_t* filename)
 {
-	static const char* function = "info_handle_set_volume_offset";
-	size_t string_length = 0;
-	uint64_t value_64bit = 0;
 	info_handle_t* info_handle = m_pInfoHandle;
 	libcerror_error_t** error = &m_pError;
 
-	if (info_handle == NULL)
+	size_t filename_length = system_string_length(filename);
+
+	if (FD_XFS::file_dev_set_name_wide(
+		info_handle->input_file_io_handle,
+		filename,
+		filename_length,
+		error) != 1)
 	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-			"%s: invalid info handle.",
-			function);
-
-		return(-1);
+		throw FDArgumentException(LIBCERROR_RUNTIME_ERROR_SET_FAILED, "unable to set file name.");
 	}
-	string_length = system_string_length(
-		string);
 
-	if (SystemStringCopyFrom64bitInDecimal(
-		string,
-		string_length + 1,
-		&value_64bit) != 1)
+	if (FD_XFS::file_dev_set(
+		info_handle->input_file_io_handle,
+		info_handle->volume_offset,
+		0,
+		error) != 1)
 	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			LIBCERROR_RUNTIME_ERROR_COPY_FAILED,
-			"%s: unable to copy string to 64-bit decimal.",
-			function);
-
-		return(-1);
+		throw FDArgumentException(LIBCERROR_RUNTIME_ERROR_SET_FAILED, "unable to set range.");
 	}
-	info_handle->volume_offset = (off64_t)value_64bit;
-
-	return(1);
 }
 
 /* Opens the input
@@ -460,104 +510,53 @@ int FDXFSInfoHandle::SetVolumeOffset(const system_character_t* string)
 int FDXFSInfoHandle::Open(const system_character_t* filename)
 {
 	static const char* function = "info_handle_open_input";
-	size_t filename_length = 0;
 
 	info_handle_t* info_handle = m_pInfoHandle;
 	libcerror_error_t** error = &m_pError;
 
 	try {
 		if (info_handle == NULL)
-		{
-			libcerror_error_set(
-				error,
-				LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-				LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-				"%s: invalid info handle.",
-				function);
+			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid info handle.");
 
-			return(-1);
-		}
-		filename_length = system_string_length(
-			filename);
-
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-		if (libbfio_file_range_set_name_wide(
-			info_handle->input_file_io_handle,
-			filename,
-			filename_length,
-			error) != 1)
-#else
-		if (libbfio_file_range_set_name(
-			info_handle->input_file_io_handle,
-			filename,
-			filename_length,
-			error) != 1)
-#endif
-		{
-			libcerror_error_set(
-				error,
-				LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-				"%s: unable to set file name.",
-				function);
-
-			goto on_error;
-		}
-		if (libbfio_file_range_set(
-			info_handle->input_file_io_handle,
-			info_handle->volume_offset,
-			0,
-			error) != 1)
-		{
-			libcerror_error_set(
-				error,
-				LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-				"%s: unable to set range.",
-				function);
-
-			goto on_error;
-		}
+		Mount(filename);
+		
 		if (libfsxfs_volume_initialize(
 			&(info_handle->input_volume),
 			error) != 1)
 		{
-			libcerror_error_set(
-				error,
-				LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-				"%s: unable to initialize input volume.",
-				function);
-
-			goto on_error;
+			throw FDArgumentException(LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED, "unable to initialize input volume.");
 		}
+
 		if (libfsxfs_volume_open_file_io_handle(
 			info_handle->input_volume,
-			info_handle->input_file_io_handle,
+			(libbfio_handle_t*)info_handle->input_file_io_handle,
 			LIBFSXFS_OPEN_READ,
 			error) != 1)
 		{
-			libcerror_error_set(
-				error,
-				LIBCERROR_ERROR_DOMAIN_IO,
-				LIBCERROR_IO_ERROR_OPEN_FAILED,
-				"%s: unable to open input volume.",
-				function);
-
-			goto on_error;
+			throw FDIOException(LIBCERROR_IO_ERROR_OPEN_FAILED, "unable to open input volume.");
 		}
 		return(1);
 	}
 	catch (FDXFSException& e) {
+		LIBCERROR_ERROR_DOMAINS err_domain = LIBCERROR_ERROR_DOMAIN_ARGUMENTS;
+		if (typeid(e) == typeid(FDIOException)) {
+			err_domain = LIBCERROR_ERROR_DOMAIN_IO;
+		}
+		libcerror_error_set(
+			error,
+			err_domain,
+			e.code(),
+			"%s: %s",
+			function, e.what());
+		
+		if (info_handle && info_handle->input_volume != NULL)
+		{
+			libfsxfs_volume_free(
+				&(info_handle->input_volume),
+				NULL);
+		}
+	}
 
-	}
-on_error:
-	if (info_handle->input_volume != NULL)
-	{
-		libfsxfs_volume_free(
-			&(info_handle->input_volume),
-			NULL);
-	}
 	return(-1);
 }
 
@@ -572,12 +571,11 @@ int FDXFSInfoHandle::Close()
 	try {
 		if (info_handle == NULL)
 			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid info handle.");
+
 		if (info_handle->input_volume != NULL)
 		{
 			if (libfsxfs_volume_close(info_handle->input_volume, error) != 0)
-			{
 				throw FDIOException(LIBCERROR_IO_ERROR_CLOSE_FAILED, "invalid info handle.");
-			}
 		}
 		return 0;
 	}
@@ -771,6 +769,7 @@ int FDXFSInfoHandle::Close()
 //	return( -1 );
 //}
 
+
 /* Prints a file entry or data stream name
  * Returns 1 if successful or -1 on error
  */
@@ -790,17 +789,20 @@ int FDXFSInfoHandle::NameValueFprint(
 	libcerror_error_t** error = &m_pError;
 	try {
 		if (info_handle == NULL)
-			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid info handle.");
+			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+				"invalid info handle.");
 
 		if (value_string == NULL)
-			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid value string.");
+			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+				"invalid value string.");
 
 		/* To ensure normalization in the escaped string is handled correctly
 		 * it stored in a temporary variable. Note that there is a worst-case of
 		 * a 1 to 4 ratio for each escaped character.
 		 */
 		if (value_string_length > (size_t)((SSIZE_MAX - 1) / (sizeof(system_character_t) * 4)))
-			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM, "invalid value string length value exceeds maximum.");
+			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
+				"invalid value string length value exceeds maximum.");
 
 		escaped_value_string_size = (value_string_length * 4) + 1;
 
@@ -808,25 +810,13 @@ int FDXFSInfoHandle::NameValueFprint(
 			sizeof(system_character_t) * escaped_value_string_size);
 
 		if (escaped_value_string == NULL)
-			throw FDMemoryException(LIBCERROR_MEMORY_ERROR_INSUFFICIENT, "unable to create escaped value string.");
+			throw FDMemoryException(LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+				"unable to create escaped value string.");
 
 		while (value_string_index < value_string_length)
 		{
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-			result = libuna_unicode_character_copy_from_utf16(
-				&unicode_character,
-				(libuna_utf16_character_t*)value_string,
-				value_string_length,
-				&value_string_index,
-				error);
-#else
-			result = libuna_unicode_character_copy_from_utf8(
-				&unicode_character,
-				(libuna_utf8_character_t*)value_string,
-				value_string_length,
-				&value_string_index,
-				error);
-#endif
+			result = copyFromUtf16(&unicode_character, (libuna_utf16_character_t*)value_string, value_string_length, &value_string_index, error);
+			
 			if (result != 1)
 			{
 				throw FDConversionException(LIBCERROR_CONVERSION_ERROR_INPUT_FAILED,
@@ -846,31 +836,17 @@ int FDXFSInfoHandle::NameValueFprint(
 					unicode_character);
 
 				if (print_count < 0)
-					throw FDConversionException(LIBCERROR_CONVERSION_ERROR_INPUT_FAILED, "unable to copy escaped Unicode character to escaped value string.");
+					throw FDConversionException(LIBCERROR_CONVERSION_ERROR_INPUT_FAILED,
+						"unable to copy escaped Unicode character to escaped value string.");
 
 				escaped_value_string_index += print_count;
 			}
 			else
 			{
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-				result = libuna_unicode_character_copy_to_utf16(
-					unicode_character,
-					(libuna_utf16_character_t*)escaped_value_string,
-					escaped_value_string_size,
-					&escaped_value_string_index,
-					error);
-#else
-				result = libuna_unicode_character_copy_to_utf8(
-					unicode_character,
-					(libuna_utf8_character_t*)escaped_value_string,
-					escaped_value_string_size,
-					&escaped_value_string_index,
-					error);
-#endif
+				result = copyToUtf16(unicode_character, (libuna_utf16_character_t*)escaped_value_string, escaped_value_string_size, &escaped_value_string_index, error);
+
 				if (result != 1)
-				{
 					throw FDConversionException(LIBCERROR_CONVERSION_ERROR_INPUT_FAILED, "unable to copy Unicode character to escaped value string.");
-				}
 			}
 		}
 		escaped_value_string[escaped_value_string_index] = 0;
@@ -895,21 +871,21 @@ int FDXFSInfoHandle::NameValueFprint(
 		return(1);
 	}
 	catch (FDXFSException& e) {
-		LIBCERROR_ERROR_DOMAINS err = LIBCERROR_ERROR_DOMAIN_ARGUMENTS;
+		LIBCERROR_ERROR_DOMAINS err_domain = LIBCERROR_ERROR_DOMAIN_ARGUMENTS;
 		
 		if (typeid(e) == typeid(FDRuntimeException)) {
-			err = LIBCERROR_ERROR_DOMAIN_RUNTIME;
+			err_domain = LIBCERROR_ERROR_DOMAIN_RUNTIME;
 		}
 		else if (typeid(e) == typeid(FDMemoryException)) {
-			err = LIBCERROR_ERROR_DOMAIN_MEMORY;
+			err_domain = LIBCERROR_ERROR_DOMAIN_MEMORY;
 		}
 		else if (typeid(e) == typeid(FDConversionException)) {
-			err = LIBCERROR_ERROR_DOMAIN_CONVERSION;
+			err_domain = LIBCERROR_ERROR_DOMAIN_CONVERSION;
 		}
 
 		libcerror_error_set(
 			error,
-			err,
+			err_domain,
 			e.code(),
 			"%s: %s",
 			function, e.what());
@@ -987,21 +963,13 @@ int FDXFSInfoHandle::PosixTimeInNanoSecondsValue_fprint(
 
 			goto on_error;
 		}
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-		result = libfdatetime_posix_time_copy_to_utf16_string(
+
+		result = copyPosixTimeToUtf16(
 			posix_time,
 			(uint16_t*)date_time_string,
 			32,
 			LIBFDATETIME_STRING_FORMAT_TYPE_ISO8601 | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME_NANO_SECONDS,
 			error);
-#else
-		result = libfdatetime_posix_time_copy_to_utf8_string(
-			posix_time,
-			(uint8_t*)date_time_string,
-			32,
-			LIBFDATETIME_STRING_FORMAT_TYPE_ISO8601 | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME_NANO_SECONDS,
-			error);
-#endif
 		if (result != 1)
 		{
 			libcerror_error_set(
@@ -1089,16 +1057,8 @@ int FDXFSInfoHandle::FileEntryValueWithName_fprint(
 	libcerror_error_t** error = &m_pError;
 
 	if (info_handle == NULL)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-			"%s: invalid info handle.",
-			function);
+		throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid info handle.");
 
-		return(-1);
-	}
 	if (libfsxfs_file_entry_get_inode_number(
 		file_entry,
 		&file_entry_identifier,
@@ -1281,17 +1241,11 @@ int FDXFSInfoHandle::FileEntryValueWithName_fprint(
 	default:
 		break;
 	}
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-	result = libfsxfs_file_entry_get_utf16_symbolic_link_target_size(
+	result = getSymbolicLinkTargetSize(
 		file_entry,
 		&symbolic_link_target_size,
 		error);
-#else
-	result = libfsxfs_file_entry_get_utf8_symbolic_link_target_size(
-		file_entry,
-		&symbolic_link_target_size,
-		error);
-#endif
+
 	if (result == -1)
 	{
 		libcerror_error_set(
@@ -1319,19 +1273,11 @@ int FDXFSInfoHandle::FileEntryValueWithName_fprint(
 
 			goto on_error;
 		}
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-		result = libfsxfs_file_entry_get_utf16_symbolic_link_target(
+		result = getSymbolicLinkTarget(
 			file_entry,
 			(uint16_t*)symbolic_link_target,
 			symbolic_link_target_size,
 			error);
-#else
-		result = libfsxfs_file_entry_get_utf8_symbolic_link_target(
-			file_entry,
-			(uint8_t*)symbolic_link_target,
-			symbolic_link_target_size,
-			error);
-#endif
 		if (result != 1)
 		{
 			libcerror_error_set(
@@ -1663,17 +1609,11 @@ int FDXFSInfoHandle::FileEntryValueWithName_fprint(
 
 					goto on_error;
 				}
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-				result = libfsxfs_extended_attribute_get_utf16_name_size(
+				result = getAttributeNameSize(
 					extended_attribute,
 					&extended_attribute_name_size,
 					error);
-#else
-				result = libfsxfs_extended_attribute_get_utf8_name_size(
-					extended_attribute,
-					&extended_attribute_name_size,
-					error);
-#endif
+
 				if (result == -1)
 				{
 					libcerror_error_set(
@@ -1707,19 +1647,11 @@ int FDXFSInfoHandle::FileEntryValueWithName_fprint(
 
 						goto on_error;
 					}
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-					result = libfsxfs_extended_attribute_get_utf16_name(
+					result = getAttributeName(
 						extended_attribute,
 						(uint16_t*)extended_attribute_name,
 						extended_attribute_name_size,
 						error);
-#else
-					result = libfsxfs_extended_attribute_get_utf8_name(
-						extended_attribute,
-						(uint8_t*)extended_attribute_name,
-						extended_attribute_name_size,
-						error);
-#endif
 					if (result != 1)
 					{
 						libcerror_error_set(
@@ -1791,55 +1723,13 @@ on_error:
 	return(-1);
 }
 
-void verify_handle(info_handle_t* info_handle, const system_character_t* path)
+void verifyHandle(info_handle_t* info_handle, const system_character_t* path)
 {
 	if (info_handle == NULL)
 		throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid info handle");
 
 	if (path == NULL)
 		throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid path");
-}
-
-int FDXFSInfoHandle::GetEntryName(libfsxfs_file_entry_t* file_entry, system_character_t* file_entry_name, size_t* file_entry_name_size)
-{	
-	int result = 0;
-	libcerror_error_t** error = &m_pError;
-
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-	result = libfsxfs_file_entry_get_utf16_name(
-		file_entry,
-		(uint16_t*)file_entry_name,
-		*file_entry_name_size,
-		error);
-#else
-	result = libfsxfs_file_entry_get_utf8_name(
-		file_entry,
-		(uint8_t*)file_entry_name,
-		*file_entry_name_size,
-		error);
-#endif
-
-	return result;
-}
-
-int FDXFSInfoHandle::GetEntryNameLen(libfsxfs_file_entry_t* file_entry, size_t* file_entry_name_size)
-{
-	int result = 0;
-	libcerror_error_t** error = &m_pError;
-
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-	result = libfsxfs_file_entry_get_utf16_name_size(
-		file_entry,
-		file_entry_name_size,
-		error);
-#else
-	result = libfsxfs_file_entry_get_utf8_name_size(
-		file_entry,
-		file_entry_name_size,
-		error);
-#endif
-
-	return result;
 }
 
 void FDXFSInfoHandle::SAFE_FREE(void* pBuffer) {
@@ -1871,7 +1761,7 @@ int FDXFSInfoHandle::FindNext(
 	libcerror_error_t** error = &m_pError;
 
 	try {
-		verify_handle(info_handle, path);
+		verifyHandle(info_handle, path);
 
 		if (path_length > (size_t)(SSIZE_MAX - 1))
 			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM, "invalid path length value exceeds maximum.");
@@ -1879,7 +1769,7 @@ int FDXFSInfoHandle::FindNext(
 		if (libfsxfs_file_entry_get_inode_number(file_entry, &file_entry_identifier, error) != 1)
 			throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_GET_FAILED, "%s: unable to retrieve inode number.");
 
-		result = GetEntryNameLen(file_entry, &file_entry_name_size);
+		result = XFSGetNameLength(file_entry, &file_entry_name_size, error);
 
 		if (result == -1)
 			throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_GET_FAILED, "unable to retrieve file entry name string size.");
@@ -1893,7 +1783,7 @@ int FDXFSInfoHandle::FindNext(
 			{
 				throw FDMemoryException(LIBCERROR_MEMORY_ERROR_INSUFFICIENT, "unable to create file entry name string.");
 			}
-			result = GetEntryName(file_entry, file_entry_name, &file_entry_name_size);
+			result = XFSGetName(file_entry, (uint16_t*)file_entry_name, file_entry_name_size, error);
 
 			if (result != 1)
 				throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_GET_FAILED, "unable to retrieve file entry name string.");
@@ -2206,21 +2096,13 @@ int FDXFSInfoHandle::FileEntry_fprint_by_path(
 	path_length = system_string_length(
 		path);
 
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-	result = libfsxfs_volume_get_file_entry_by_utf16_path(
+	result = getFileEntryPath(
 		info_handle->input_volume,
 		(uint16_t*)path,
 		path_length,
 		&file_entry,
 		error);
-#else
-	result = libfsxfs_volume_get_file_entry_by_utf8_path(
-		info_handle->input_volume,
-		(uint8_t*)path,
-		path_length,
-		&file_entry,
-		error);
-#endif
+
 	if (result == -1)
 	{
 		libcerror_error_set(
@@ -2491,17 +2373,11 @@ int FDXFSInfoHandle::Volume_fprint()
 		info_handle->notify_stream,
 		"\tLabel\t\t\t\t: ");
 
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-	result = libfsxfs_volume_get_utf16_label_size(
+	result = getLabelSize(
 		info_handle->input_volume,
 		&value_string_size,
 		error);
-#else
-	result = libfsxfs_volume_get_utf8_label_size(
-		info_handle->input_volume,
-		&value_string_size,
-		error);
-#endif
+
 	if (result != 1)
 	{
 		libcerror_error_set(
@@ -2529,19 +2405,11 @@ int FDXFSInfoHandle::Volume_fprint()
 
 			goto on_error;
 		}
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-		result = libfsxfs_volume_get_utf16_label(
+		result = getLabel(
 			info_handle->input_volume,
 			(uint16_t*)value_string,
 			value_string_size,
 			error);
-#else
-		result = libfsxfs_volume_get_utf8_label(
-			info_handle->input_volume,
-			(uint8_t*)value_string,
-			value_string_size,
-			error);
-#endif
 		if (result != 1)
 		{
 			libcerror_error_set(

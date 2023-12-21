@@ -139,12 +139,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\FDXFSInfo\FDXFSFileDev.cpp" />
     <ClCompile Include="..\..\FDXFSInfo\FDXFSInfo.cpp" />
     <ClCompile Include="..\..\FDXFSInfo\FDXFSHelper.cpp" />
     <ClCompile Include="..\..\FDXFSInfo\FDXFSInfoHandle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\FDXFSInfo\FDXFSException.h" />
+    <ClInclude Include="..\..\FDXFSInfo\FDXFSFileDev.h" />
     <ClInclude Include="..\..\FDXFSInfo\FDXFSHelper.h" />
     <ClInclude Include="..\..\FDXFSInfo\FDXFSInfoHandle.h" />
   </ItemGroup>

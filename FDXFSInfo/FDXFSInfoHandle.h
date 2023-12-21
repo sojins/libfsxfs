@@ -62,7 +62,7 @@
 #include "../fsxfstools/fsxfstools_libfsxfs.h"
 
 #include "FDXFSException.h"
-
+#include "FDXFSFileDev.h"
 typedef struct info_handle info_handle_t;
 
 struct info_handle
@@ -108,7 +108,7 @@ private:
 public:
 	info_handle_t* GetInfoHandle() { return m_pInfoHandle; }
 
-	int SystemStringCopyFrom64bitInDecimal(
+	int CopyFrom64bitInDecimal(
 		const system_character_t* string,
 		size_t string_size,
 		uint64_t* value_64bit);
@@ -117,11 +117,12 @@ public:
 
 	int Finalize();
 
-	int SignalAbort();
+	//int SignalAbort();
 
 	//int SetBodyFile(const system_character_t* filename);
 
-	int SetVolumeOffset(const system_character_t* string);
+	//int SetVolumeOffset(const system_character_t* string);
+	void Mount(const system_character_t* filename);
 
 	int Open(const system_character_t* filename);
 
@@ -160,9 +161,9 @@ public:
 		const system_character_t* path,
 		size_t path_length
 	);
-	int GetEntryName(libfsxfs_file_entry_t* file_entry, system_character_t* file_entry_name, size_t* file_entry_name_size);
+	//int GetEntryName(libfsxfs_file_entry_t* file_entry, system_character_t* file_entry_name, size_t* file_entry_name_size);
 
-	int GetEntryNameLen(libfsxfs_file_entry_t* file_entry, size_t* file_entry_name_size);
+	//int GetEntryNameLen(libfsxfs_file_entry_t* file_entry, size_t* file_entry_name_size);
 
 	void SAFE_FREE(void* pBuffer);
 

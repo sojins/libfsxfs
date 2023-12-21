@@ -8,10 +8,10 @@ int main()
 {
     std::cout << "Hello World!\n";
 
-    FDXFSHelper helper;
-    if (helper.Initialize()) {
-        helper.Open(L"G:\\Evidences\\Dumps\\XFSDump\\xfs_ubuntu.raw");
-        helper.DirTest();
-        helper.Close();
+    if (GetXFSHelper()->Initialize()) {
+        GetXFSHelper()->Open(L"G:\\Evidences\\Dumps\\XFSDump\\xfs_ubuntu.raw");
+        GetXFSHelper()->TestVolume();
+        GetXFSHelper()->DirTest();
+        GetXFSHelper()->Close();
     }
 }
