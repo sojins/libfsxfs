@@ -27,13 +27,12 @@ enum FSXFSINFO_MODES
 
 
 
-#define xfs_fs libfsxfs_file_system_t
 class FDXFSHelper
 {
 private:
 	FDXFSHelper();
 	~FDXFSHelper();
-	FDXFSHelper(const FDXFSHelper& inst) {}
+	FDXFSHelper(const FDXFSHelper& inst);
 
 public:
 	static FDXFSHelper* getInstance(int nRunType = 0)
@@ -57,7 +56,7 @@ public:
 	}
 
 private:
-	typedef std::unordered_map<std::string, struct xfs_fs*>	XFSBlockDevInfo;
+	typedef std::unordered_map<std::string, struct libfsxfs_file_system_t*>	XFSBlockDevInfo;
 	XFSBlockDevInfo m_block_dev;
 	static FDXFSHelper* m_pInstance;
 	friend FDXFSHelper* GetXFSHelper();
@@ -65,7 +64,7 @@ private:
 	libcerror_error_t* m_pError;
 
 protected:
-	const char* m_program;
+	const char* TAG;
 	std::wstring m_source;
 	std::string m_mountpoint;
 	std::stack<uint64_t> m_sDeletedInode;
@@ -74,12 +73,14 @@ protected:
 
 public:
 	BOOL Mount(CVirtualDrive* pVdrive, const char* mount_point);
+	BOOL Unmount(const char* mount_point);
 	BOOL IsMounted();
 
 	BOOL Initialize();
-	BOOL Open(const TCHAR* source);
-	int DirTest();
-	int TestVolume();
+	BOOL Open(LPCTSTR source);
+	int Dir();
+	int PrintVolumeInfo();
+	int PrintHierarchy();
 	void Close();
 };
 FDXFSHelper* GetXFSHelper();

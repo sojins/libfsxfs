@@ -8,11 +8,16 @@ FDXFSHelper* FDXFSHelper::m_pInstance = NULL;
 
 FDXFSHelper::FDXFSHelper()
 {
-	m_program = "FDXFSHelper";
+	TAG = "FDXFSHelper";
 	m_source = L"";
 
 	m_pError = NULL;
 	m_pXfsInfoHandle = NULL;
+}
+
+FDXFSHelper::FDXFSHelper(const FDXFSHelper& inst)
+{
+	FDXFSHelper();
 }
 
 FDXFSHelper::~FDXFSHelper()
@@ -21,8 +26,8 @@ FDXFSHelper::~FDXFSHelper()
 		delete m_pXfsInfoHandle;
 
 	for (XFSBlockDevInfo::iterator it = m_block_dev.begin(); it != m_block_dev.end(); it++) {
-		xfs_fs* b = it->second;
-		if (b) {
+		libfsxfs_file_system_t* xfs_fs = it->second;
+		if (xfs_fs) {
 			//FD_EXT4::umount(it->first.c_str());
 		}
 	}
@@ -38,7 +43,7 @@ BOOL FDXFSHelper::Mount(CVirtualDrive* pVdrive, const char* mount_point)
 	std::stringstream ss;
 	ss << mount_point;
 	if (m_block_dev.size() > 0) {
-		XFSBlockDevInfo::iterator it = m_block_dev.find(mount_point);
+		XFSBlockDevInfo::iterator it = m_block_dev.find(mp);
 		if (it != m_block_dev.end()) {
 			ss << "#";
 			ss << m_block_dev.size();
@@ -56,6 +61,24 @@ BOOL FDXFSHelper::Mount(CVirtualDrive* pVdrive, const char* mount_point)
 	//	m_block_dev.insert(std::make_pair(ss.str(), fs));
 	//	return TRUE;
 	//}
+
+	xfs_blockdev* bd = FD_XFS::open_blockdev(mount_point, pVdrive);
+	if (bd) {
+		xfsinfo_handle_t* info_handle = m_pXfsInfoHandle->GetInfoHandle();
+		if (info_handle)
+		{
+			libfsxfs_file_system_t* xfs_fs;
+			m_block_dev.insert(std::make_pair(ss.str(), xfs_fs));
+			info_handle->input_file_io_handle = bd->handle;
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+BOOL FDXFSHelper::Unmount(const char* mount_point)
+{
 	return FALSE;
 }
 
@@ -76,7 +99,7 @@ BOOL FDXFSHelper::Initialize()
 			throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_GET_FAILED, "Unable to initialize info handle.\n");
 
 		// for Debug
-		info_handle_t* pInfoHandle = m_pXfsInfoHandle->GetInfoHandle();
+		xfsinfo_handle_t* pInfoHandle = m_pXfsInfoHandle->GetInfoHandle();
 		if (pInfoHandle == NULL)
 			throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_GET_FAILED, "invalid info handle.\n");
 
@@ -98,7 +121,7 @@ BOOL FDXFSHelper::Initialize()
 	return FALSE;
 }
 
-BOOL FDXFSHelper::Open(const TCHAR* source)
+BOOL FDXFSHelper::Open(LPCTSTR source)
 {
 	if (NULL == source) return FALSE;
 	if (!m_source.empty()) {
@@ -106,11 +129,7 @@ BOOL FDXFSHelper::Open(const TCHAR* source)
 	}
 
 	if (m_pXfsInfoHandle->Open(source) != 1) {
-		fprintf(
-			stderr,
-			"Unable to open: %" PRIs_SYSTEM ".\n",
-			m_source.c_str());
-
+		fprintf(stderr, "Unable to open: %" PRIs_SYSTEM ".\n", m_source.c_str());
 		return FALSE;
 	}
 
@@ -128,22 +147,28 @@ void FDXFSHelper::Close()
 	}
 }
 
-int FDXFSHelper::TestVolume()
+int FDXFSHelper::PrintVolumeInfo()
 {
-	info_handle_t* info_handle = m_pXfsInfoHandle->GetInfoHandle();
+	xfsinfo_handle_t* info_handle = m_pXfsInfoHandle->GetInfoHandle();
 	if (info_handle == NULL)
 		throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid info handle.");
-	m_pXfsInfoHandle->Volume_fprint();
+
+	m_pXfsInfoHandle->PrintVolumeInfo();
 	return 1;
 }
 
-int FDXFSHelper::DirTest()
+int FDXFSHelper::PrintHierarchy()
+{
+	return m_pXfsInfoHandle->PrintFileSystemHierarchy();
+}
+
+int FDXFSHelper::Dir()
 {
 	libfsxfs_file_entry_t* file_entry = NULL;
 	static const char* function = "FDXFSHelper::Dir()";
 	int result = 0;
-
-	info_handle_t* info_handle = m_pXfsInfoHandle->GetInfoHandle();
+	
+	xfsinfo_handle_t* info_handle = m_pXfsInfoHandle->GetInfoHandle();
 	libfsxfs_error_t** error = &m_pError;
 
 	try {
@@ -198,6 +223,7 @@ int FDXFSHelper::DirTest()
 			&file_entry,
 			NULL);
 	}
+
 	return(-1);
 }
 

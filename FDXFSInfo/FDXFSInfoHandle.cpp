@@ -37,11 +37,13 @@
 
 #define DIGEST_HASH_STRING_SIZE_MD5	33
 #define INFO_HANDLE_NOTIFY_STREAM	stdout
+void verifyHandle(xfsinfo_handle_t* info_handle, const system_character_t* path);
+void verifyHandle(xfsinfo_handle_t* info_handle);
 
 FDXFSInfoHandle::FDXFSInfoHandle()
 {
 	m_pError = NULL;
-	m_pInfoHandle = NULL;
+	m_pInfo = NULL;
 }
 
 FDXFSInfoHandle::~FDXFSInfoHandle()
@@ -58,7 +60,7 @@ FDXFSInfoHandle::~FDXFSInfoHandle()
 #define getSymbolicLinkTargetSize libfsxfs_file_entry_get_utf16_symbolic_link_target_size
 #define getAttributeNameSize libfsxfs_extended_attribute_get_utf16_name_size
 #define getAttributeName libfsxfs_extended_attribute_get_utf16_name
-#define getFileEntryPath libfsxfs_volume_get_file_entry_by_utf16_path
+//#define getFileEntryPath libfsxfs_volume_get_file_entry_by_utf16_path
 #define getLabelSize libfsxfs_volume_get_utf16_label_size
 #define getLabel libfsxfs_volume_get_utf16_label
 #else
@@ -71,122 +73,10 @@ FDXFSInfoHandle::~FDXFSInfoHandle()
 #define getSymbolicLinkTargetSize libfsxfs_file_entry_get_utf8_symbolic_link_target_size
 #define getAttributeNameSize libfsxfs_extended_attribute_get_utf8_name_size
 #define getAttributeName libfsxfs_extended_attribute_get_utf8_name
-#define getFileEntryPath libfsxfs_volume_get_file_entry_by_utf8_path
+//#define getFileEntryPath libfsxfs_volume_get_file_entry_by_utf8_path
 #define getLabelSize libfsxfs_volume_get_utf8_label_size
 #define getLabel libfsxfs_volume_get_utf8_label
 #endif
-
-
-/* Copies a string of a decimal value to a 64-bit value
- * Returns 1 if successful or -1 on error
- */
-int FDXFSInfoHandle::CopyFrom64bitInDecimal(
-	const system_character_t* string,
-	size_t string_size,
-	uint64_t* value_64bit)
-{
-	static const char* function = "info_handle_system_string_copy_from_64_bit_in_decimal";
-	size_t string_index = 0;
-	system_character_t character_value = 0;
-	uint8_t maximum_string_index = 20;
-	int8_t sign = 1;
-
-	libcerror_error_t** error = &m_pError;
-
-	if (string == NULL)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-			"%s: invalid string.",
-			function);
-
-		return(-1);
-	}
-	if (string_size > (size_t)SSIZE_MAX)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
-			"%s: invalid string size value exceeds maximum.",
-			function);
-
-		return(-1);
-	}
-	if (value_64bit == NULL)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-			"%s: invalid value 64-bit.",
-			function);
-
-		return(-1);
-	}
-	*value_64bit = 0;
-
-	if (string[string_index] == (system_character_t)'-')
-	{
-		string_index++;
-		maximum_string_index++;
-
-		sign = -1;
-	}
-	else if (string[string_index] == (system_character_t)'+')
-	{
-		string_index++;
-		maximum_string_index++;
-	}
-	while (string_index < string_size)
-	{
-		if (string[string_index] == 0)
-		{
-			break;
-		}
-		if (string_index > (size_t) maximum_string_index)
-		{
-			libcerror_error_set(
-				error,
-				LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-				LIBCERROR_ARGUMENT_ERROR_VALUE_TOO_LARGE,
-				"%s: string too large.",
-				function);
-
-			return(-1);
-		}
-		*value_64bit *= 10;
-
-		if ((string[string_index] >= (system_character_t)'0')
-			&& (string[string_index] <= (system_character_t)'9'))
-		{
-			character_value = (system_character_t)(string[string_index] - (system_character_t)'0');
-		}
-		else
-		{
-			libcerror_error_set(
-				error,
-				LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
-				"%s: unsupported character value: %" PRIc_SYSTEM " at index: %d.",
-				function,
-				string[string_index],
-				string_index);
-
-			return(-1);
-		}
-		*value_64bit += character_value;
-
-		string_index++;
-	}
-	if (sign == -1)
-	{
-		*value_64bit *= (uint64_t)-1;
-	}
-	return(1);
-}
 
 /* Creates an info handle
  * Make sure the value info_handle is referencing, is set to NULL
@@ -196,7 +86,7 @@ int FDXFSInfoHandle::Initialize()
 {
 	static const char* function = "info_handle_initialize";
 
-	info_handle_t** info_handle = &m_pInfoHandle;
+	xfsinfo_handle_t** info_handle = &m_pInfo;
 	uint8_t calculate_md5 = 0;
 	libcerror_error_t** error = &m_pError;
 
@@ -207,68 +97,54 @@ int FDXFSInfoHandle::Initialize()
 		if (*info_handle != NULL)
 			throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET, "invalid info handle value already set.");
 
-		*info_handle = memory_allocate_structure(info_handle_t);
+		*info_handle = memory_allocate_structure(xfsinfo_handle_t);
 
 		if (*info_handle == NULL)
 			throw FDMemoryException(LIBCERROR_MEMORY_ERROR_INSUFFICIENT, "unable to create info handle.");
 
-		if (memory_set(*info_handle, 0, sizeof(info_handle_t)) == NULL)
+		if (memory_set(*info_handle, 0, sizeof(xfsinfo_handle_t)) == NULL)
 			throw FDMemoryException(LIBCERROR_MEMORY_ERROR_SET_FAILED, "unable to clear info handle.");
 
-#if 1
-		xfs_blockdev* bd = FD_XFS::open_blockdev("xfs_mp", NULL);
-		if (bd) {
-			(*info_handle)->input_file_io_handle = bd->handle;
-		}
-		//if (FD_XFS::file_dev_initialize(&((*info_handle)->input_file_io_handle), error) != 1)
-		//	throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED, "unable to initialize input file IO handle.");
-#else
-		libbfio_handle_t* handle = (libbfio_handle_t*)((*info_handle)->input_file_io_handle);
-		if (libbfio_file_range_initialize(&handle, error) != 1)
-			throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED, "unable to initialize input file IO handle.");		
-#endif
+		//xfs_blockdev* bd = FD_XFS::open_blockdev("xfs_mp", NULL);
+		//if (bd) {
+		//	(*info_handle)->input_file_io_handle = bd->handle;
+		//}
+
 
 		(*info_handle)->calculate_md5 = calculate_md5;
 		(*info_handle)->notify_stream = INFO_HANDLE_NOTIFY_STREAM;
 
 		return(1);
 	}
-	catch (FDArgumentException& e) {
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			e.code(),
-			"%s: %s",
-			function, e.what());
-	}
-	catch (FDRuntimeException& e) {
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			e.code(),
-			"%s: %s",
-			function, e.what());
-	}
-	catch (FDMemoryException& e) {
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_MEMORY,
-			e.code(),
-			"%s: %s",
-			function, e.what());
-	}
-
-	if (*info_handle != NULL)
+	catch (FDXFSException& e)
 	{
-		if ((*info_handle)->input_file_io_handle != NULL)
-		{
-			//libbfio_handle_free(
-			//	&((*info_handle)->input_file_io_handle),
-			//	NULL);
+		LIBCERROR_ERROR_DOMAINS err_domain = LIBCERROR_ERROR_DOMAIN_ARGUMENTS;
+		if (typeid(e) == typeid(FDRuntimeException)) {
+			err_domain = LIBCERROR_ERROR_DOMAIN_RUNTIME;
 		}
-		SAFE_FREE(*info_handle);
+		else if (typeid(e) == typeid(FDMemoryException)) {
+			err_domain = LIBCERROR_ERROR_DOMAIN_MEMORY;
+		}
+
+		libcerror_error_set(
+			error,
+			err_domain,
+			e.code(),
+			"%s: %s",
+			function, e.what());
+
+		if (*info_handle != NULL)
+		{
+			if ((*info_handle)->input_file_io_handle != NULL)
+			{
+				//libbfio_handle_free(
+				//	&((*info_handle)->input_file_io_handle),
+				//	NULL);
+			}
+			SAFE_FREE(*info_handle);
+		}
+		return(-1);
 	}
-	return(-1);
 }
 
 /* Frees an info handle
@@ -278,7 +154,7 @@ int FDXFSInfoHandle::Finalize()
 {
 	static const char* function = "info_handle_free";
 	int result = 1;
-	info_handle_t** info_handle = &m_pInfoHandle;
+	xfsinfo_handle_t** info_handle = &m_pInfo;
 	libcerror_error_t** error = &m_pError;
 	try {
 		if (info_handle == NULL)
@@ -480,7 +356,7 @@ int FDXFSInfoHandle::Finalize()
  */
 void FDXFSInfoHandle::Mount(const system_character_t* filename)
 {
-	info_handle_t* info_handle = m_pInfoHandle;
+	xfsinfo_handle_t* info_handle = GetInfoHandle();
 	libcerror_error_t** error = &m_pError;
 
 	size_t filename_length = system_string_length(filename);
@@ -511,7 +387,7 @@ int FDXFSInfoHandle::Open(const system_character_t* filename)
 {
 	static const char* function = "info_handle_open_input";
 
-	info_handle_t* info_handle = m_pInfoHandle;
+	xfsinfo_handle_t* info_handle = GetInfoHandle();
 	libcerror_error_t** error = &m_pError;
 
 	try {
@@ -520,21 +396,16 @@ int FDXFSInfoHandle::Open(const system_character_t* filename)
 
 		Mount(filename);
 		
-		if (libfsxfs_volume_initialize(
-			&(info_handle->input_volume),
-			error) != 1)
-		{
+		if (libfsxfs_volume_initialize(&(info_handle->input_volume), error) != 1)
 			throw FDArgumentException(LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED, "unable to initialize input volume.");
-		}
 
 		if (libfsxfs_volume_open_file_io_handle(
 			info_handle->input_volume,
 			(libbfio_handle_t*)info_handle->input_file_io_handle,
 			LIBFSXFS_OPEN_READ,
 			error) != 1)
-		{
 			throw FDIOException(LIBCERROR_IO_ERROR_OPEN_FAILED, "unable to open input volume.");
-		}
+
 		return(1);
 	}
 	catch (FDXFSException& e) {
@@ -566,7 +437,7 @@ int FDXFSInfoHandle::Open(const system_character_t* filename)
 int FDXFSInfoHandle::Close()
 {
 	static const char* function = "FDXFSInfoHandle::Close()";
-	info_handle* info_handle = m_pInfoHandle;
+	xfsinfo_handle_t* info_handle = GetInfoHandle();
 	libcerror_error_t** error = &m_pError;
 	try {
 		if (info_handle == NULL)
@@ -773,7 +644,7 @@ int FDXFSInfoHandle::Close()
 /* Prints a file entry or data stream name
  * Returns 1 if successful or -1 on error
  */
-int FDXFSInfoHandle::NameValueFprint(
+int FDXFSInfoHandle::PrintNameValue(
 	const system_character_t* value_string,
 	size_t value_string_length)
 {
@@ -785,16 +656,10 @@ int FDXFSInfoHandle::NameValueFprint(
 	size_t value_string_index = 0;
 	int print_count = 0;
 	int result = 0;
-	info_handle_t* info_handle = m_pInfoHandle;
+	xfsinfo_handle_t* info_handle = GetInfoHandle();
 	libcerror_error_t** error = &m_pError;
 	try {
-		if (info_handle == NULL)
-			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-				"invalid info handle.");
-
-		if (value_string == NULL)
-			throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-				"invalid value string.");
+		verifyHandle(info_handle, value_string);
 
 		/* To ensure normalization in the escaped string is handled correctly
 		 * it stored in a temporary variable. Note that there is a worst-case of
@@ -912,7 +777,7 @@ int FDXFSInfoHandle::PosixTimeInNanoSecondsValue_fprint(
 	static const char* function = "info_handle_posix_time_in_nano_seconds_value_fprint";
 	int result = 0;
 
-	info_handle_t* info_handle = m_pInfoHandle;
+	xfsinfo_handle_t* info_handle = GetInfoHandle();
 	libcerror_error_t** error = &m_pError;
 
 	if (info_handle == NULL)
@@ -1053,7 +918,7 @@ int FDXFSInfoHandle::FileEntryValueWithName_fprint(
 	int number_of_extended_attributes = 0;
 	int result = 0;
 
-	info_handle_t* info_handle = m_pInfoHandle;
+	xfsinfo_handle_t* info_handle = GetInfoHandle();
 	libcerror_error_t** error = &m_pError;
 
 	if (info_handle == NULL)
@@ -1306,10 +1171,10 @@ int FDXFSInfoHandle::FileEntryValueWithName_fprint(
 	}
 	if (info_handle->bodyfile_stream != NULL)
 	{
-		//if( info_handle->calculate_md5 == 0 )
-		//{
-		//	md5_string[ 1 ] = 0;
-		//}
+		if( info_handle->calculate_md5 == 0 )
+		{
+			md5_string[ 1 ] = 0;
+		}
 		//else if( ( file_mode & 0xf000 ) == 0x8000 )
 		//{
 		//	if( info_handle_file_entry_calculate_md5(
@@ -1408,7 +1273,7 @@ int FDXFSInfoHandle::FileEntryValueWithName_fprint(
 
 			if (path != NULL)
 			{
-				if (NameValueFprint(
+				if (PrintNameValue(
 					path,
 					path_length) != 1)
 				{
@@ -1424,7 +1289,7 @@ int FDXFSInfoHandle::FileEntryValueWithName_fprint(
 			}
 			if (file_entry_name != NULL)
 			{
-				if (NameValueFprint(
+				if (PrintNameValue(
 					file_entry_name,
 					file_entry_name_length) != 1)
 				{
@@ -1723,7 +1588,13 @@ on_error:
 	return(-1);
 }
 
-void verifyHandle(info_handle_t* info_handle, const system_character_t* path)
+void verifyHandle(xfsinfo_handle_t* info_handle)
+{
+	if (info_handle == NULL)
+		throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid info handle");
+}
+
+void verifyHandle(xfsinfo_handle_t* info_handle, const system_character_t* path)
 {
 	if (info_handle == NULL)
 		throw FDArgumentException(LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE, "invalid info handle");
@@ -1748,6 +1619,7 @@ int FDXFSInfoHandle::FindNext(
 	libfsxfs_file_entry_t* sub_file_entry = NULL;
 	system_character_t* file_entry_name = NULL;
 	system_character_t* sub_path = NULL;
+	
 	static const char* function = "FDXFSInfoHandle::FindNext";
 	size_t file_entry_name_length = 0;
 	size_t file_entry_name_size = 0;
@@ -1757,7 +1629,7 @@ int FDXFSInfoHandle::FindNext(
 	int result = 0;
 	int sub_file_entry_index = 0;
 
-	info_handle_t* info_handle = GetInfoHandle();
+	xfsinfo_handle_t* info_handle = GetInfoHandle();
 	libcerror_error_t** error = &m_pError;
 
 	try {
@@ -1776,8 +1648,7 @@ int FDXFSInfoHandle::FindNext(
 
 		if ((result == 1) && (file_entry_name_size > 0))
 		{
-			file_entry_name = system_string_allocate(
-				file_entry_name_size);
+			file_entry_name = system_string_allocate(file_entry_name_size);
 
 			if (file_entry_name == NULL)
 			{
@@ -1797,14 +1668,17 @@ int FDXFSInfoHandle::FindNext(
 		}
 		else
 		{
-			if (NameValueFprint(path, path_length) != 1)
-				throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_PRINT_FAILED, "unable to print path string.");
+			if (FileEntryValueWithName_fprint(file_entry, path, path_length, file_entry_name, file_entry_name_length) != 1)
+			{}
+			//throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_PRINT_FAILED, "unable to print file entry.");
+			//if (PrintNameValue(path, path_length) != 1)
+			//	throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_PRINT_FAILED, "unable to print path string.");
 
-			if (file_entry_name != NULL)
-				if (NameValueFprint( file_entry_name, file_entry_name_length) != 1)
-					throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_PRINT_FAILED, "unable to print file entry name string.");
+			//if (file_entry_name != NULL)
+			//	if (PrintNameValue( file_entry_name, file_entry_name_length) != 1)
+			//		throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_PRINT_FAILED, "unable to print file entry name string.");
 
-			fprintf(info_handle->notify_stream,"\n");
+			//fprintf(info_handle->notify_stream,"\n");
 		}
 
 		if (libfsxfs_file_entry_get_number_of_sub_file_entries(file_entry, &number_of_sub_file_entries, error) != 1)
@@ -1824,7 +1698,7 @@ int FDXFSInfoHandle::FindNext(
 
 			if (system_string_copy(sub_path, path, path_length) == NULL)
 				throw FDMemoryException(LIBCERROR_MEMORY_ERROR_COPY_FAILED, "unable to copy path to sub path.");
-
+			
 			if (file_entry_name != NULL)
 			{
 				if (system_string_copy( &(sub_path[path_length]), file_entry_name, file_entry_name_size - 1) == NULL)
@@ -1838,7 +1712,7 @@ int FDXFSInfoHandle::FindNext(
 				sub_file_entry_index < number_of_sub_file_entries;
 				sub_file_entry_index++)
 			{
-				if (libfsxfs_file_entry_get_sub_file_entry_by_index(file_entry,sub_file_entry_index,&sub_file_entry,error) != 1)
+				if (libfsxfs_file_entry_get_sub_file_entry_by_index(file_entry, sub_file_entry_index, &sub_file_entry, error) != 1)
 					throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_GET_FAILED, "unable to retrieve sub file entry: %d.");
 
 				if (FindNext( sub_file_entry, sub_path, sub_path_size - 1) != 1) {
@@ -1886,10 +1760,9 @@ int FDXFSInfoHandle::FindNext(
 			function, e.what());
 		return -1;
 	}
+
 	if (sub_file_entry != NULL)
-	{
 		libfsxfs_file_entry_free(&sub_file_entry, NULL);
-	}
 
 	SAFE_FREE(sub_path);
 	SAFE_FREE(file_entry_name);
@@ -1905,7 +1778,7 @@ int FDXFSInfoHandle::FileEntries_fprint()
 	static const char* function = "info_handle_file_entries_fprint";
 	uint64_t file_entry_identifier = 0;
 	uint32_t number_of_file_entries = 0;
-	info_handle* info_handle = m_pInfoHandle;
+	xfsinfo_handle* info_handle = GetInfoHandle();
 	libcerror_error_t** error = &m_pError;
 #ifdef TODO
 	if (libfsxfs_volume_get_number_of_file_entries(
@@ -1956,7 +1829,7 @@ int FDXFSInfoHandle::FileEntry_fprint_by_identifier(
 #ifdef TODO
 	int is_empty = 0;
 #endif
-	info_handle_t* info_handle = m_pInfoHandle;
+	xfsinfo_handle_t* info_handle = GetInfoHandle();
 	libcerror_error_t** error = &m_pError;
 
 	if (info_handle == NULL)
@@ -2067,136 +1940,6 @@ on_error:
 			NULL);
 	}
 	return(-1);
-	}
-
-/* Prints the file entry information for a specific path
- * Returns 1 if successful or -1 on error
- */
-int FDXFSInfoHandle::FileEntry_fprint_by_path(
-	const system_character_t* path)
-{
-	libfsxfs_file_entry_t* file_entry = NULL;
-	static const char* function = "info_handle_file_entry_fprint_by_path";
-	size_t path_length = 0;
-	int result = 0;
-	info_handle_t* info_handle = m_pInfoHandle;
-	libcerror_error_t** error = &m_pError;
-
-	if (info_handle == NULL)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-			"%s: invalid info handle.",
-			function);
-
-		return(-1);
-	}
-	path_length = system_string_length(
-		path);
-
-	result = getFileEntryPath(
-		info_handle->input_volume,
-		(uint16_t*)path,
-		path_length,
-		&file_entry,
-		error);
-
-	if (result == -1)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			"%s: unable to retrieve file entry.",
-			function);
-
-		goto on_error;
-	}
-	else if (result == 0)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			"%s: file entry not found.",
-			function);
-
-		goto on_error;
-	}
-	fprintf(
-		info_handle->notify_stream,
-		"X File System information:\n\n");
-
-	fprintf(
-		info_handle->notify_stream,
-		"File entry:\n");
-
-	fprintf(
-		info_handle->notify_stream,
-		"\tPath\t\t\t: ");
-
-	if (NameValueFprint(
-		path,
-		path_length) != 1)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
-			"%s: unable to print path string.",
-			function);
-
-		goto on_error;
-	}
-	fprintf(
-		info_handle->notify_stream,
-		"\n");
-
-	if (FileEntryValueWithName_fprint(
-		file_entry,
-		path,
-		path_length,
-		NULL,
-		0) != 1)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
-			"%s: unable to print file entry.",
-			function);
-
-		goto on_error;
-	}
-	if (libfsxfs_file_entry_free(
-		&file_entry,
-		error) != 1)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-			"%s: unable to free file entry.",
-			function);
-
-		goto on_error;
-	}
-	fprintf(
-		info_handle->notify_stream,
-		"\n");
-
-	return(1);
-
-on_error:
-	if (file_entry != NULL)
-	{
-		libfsxfs_file_entry_free(
-			&file_entry,
-			NULL);
-	}
-	return(-1);
 }
 
 libfsxfs_file_entry_t* FDXFSInfoHandle::FindFirst()
@@ -2205,7 +1948,7 @@ libfsxfs_file_entry_t* FDXFSInfoHandle::FindFirst()
 	static const char* function = "FDXFSInfoHandle::FindFirst()";
 	int result = 0;
 
-	info_handle_t* info_handle = GetInfoHandle();
+	xfsinfo_handle_t* info_handle = GetInfoHandle();
 	libcerror_error_t** error = &m_pError;
 
 	if (info_handle == NULL)
@@ -2222,97 +1965,56 @@ libfsxfs_file_entry_t* FDXFSInfoHandle::FindFirst()
 /* Prints the file system hierarchy information
  * Returns 1 if successful or -1 on error
  */
-int FDXFSInfoHandle::FileSystem_hierarchy_fprint()
+int FDXFSInfoHandle::PrintFileSystemHierarchy()
 {
 	libfsxfs_file_entry_t* file_entry = NULL;
 	static const char* function = "info_handle_file_system_hierarchy_fprint";
 	int result = 0;
 
-	info_handle_t* info_handle = m_pInfoHandle;
+	xfsinfo_handle_t* info_handle = GetInfoHandle();
 	libcerror_error_t** error = &m_pError;
+	try {
+		verifyHandle(info_handle);
 
-	if (info_handle == NULL)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-			"%s: invalid info handle.",
-			function);
+		if (info_handle->bodyfile_stream == NULL)
+		{
+			fprintf(info_handle->notify_stream, "X File System information:\n\n");
+			fprintf(info_handle->notify_stream, "File system hierarchy:\n");
+		}
+		result = libfsxfs_volume_get_root_directory(
+			info_handle->input_volume,
+			&file_entry,
+			error);
 
-		return(-1);
+		if (result == -1)
+			throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_GET_FAILED, "unable to retrieve root directory file entry.");
+
+		else if (result != 0)
+		{
+			if (FindNext(file_entry, _SYSTEM_STRING("/"), 1) != 1)
+				throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_PRINT_FAILED, "unable to print root directory file entry information.");
+
+			if (libfsxfs_file_entry_free(&file_entry, error) != 1)
+				throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED, "unable to free file entry.");
+		}
+		if (info_handle->bodyfile_stream == NULL)
+			fprintf(info_handle->notify_stream, "\n");
+
+		return(1);
 	}
-	if (info_handle->bodyfile_stream == NULL)
+	catch (FDRuntimeException& e)
 	{
-		fprintf(
-			info_handle->notify_stream,
-			"X File System information:\n\n");
+		if (file_entry != NULL)
+			libfsxfs_file_entry_free(&file_entry, NULL);
 
-		fprintf(
-			info_handle->notify_stream,
-			"File system hierarchy:\n");
-	}
-	result = libfsxfs_volume_get_root_directory(
-		info_handle->input_volume,
-		&file_entry,
-		error);
-
-	if (result == -1)
-	{
 		libcerror_error_set(
 			error,
 			LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			"%s: unable to retrieve root directory file entry.",
-			function);
-
-		goto on_error;
+			e.code(),
+			"%s: %s",
+			function, e.what());
 	}
-	else if (result != 0)
-	{
-		if (FindNext(
-			file_entry,
-			_SYSTEM_STRING("/"),
-			1) != 1)
-		{
-			libcerror_error_set(
-				error,
-				LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
-				"%s: unable to print root directory file entry information.",
-				function);
 
-			goto on_error;
-		}
-		if (libfsxfs_file_entry_free(
-			&file_entry,
-			error) != 1)
-		{
-			libcerror_error_set(
-				error,
-				LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-				"%s: unable to free file entry.",
-				function);
-
-			goto on_error;
-		}
-	}
-	if (info_handle->bodyfile_stream == NULL)
-	{
-		fprintf(
-			info_handle->notify_stream,
-			"\n");
-	}
-	return(1);
-
-on_error:
-	if (file_entry != NULL)
-	{
-		libfsxfs_file_entry_free(
-			&file_entry,
-			NULL);
-	}
 	return(-1);
 }
 
@@ -2320,135 +2022,82 @@ on_error:
 /* Prints the volume information
  * Returns 1 if successful or -1 on error
  */
-int FDXFSInfoHandle::Volume_fprint()
+int FDXFSInfoHandle::PrintVolumeInfo()
 {
-	system_character_t* value_string = NULL;
+	//system_character_t* value_string = NULL;
 	static const char* function = "info_handle_volume_fprint";
 	size_t value_string_size = 0;
 	uint8_t format_version = 0;
 	int result = 0;
 
-	info_handle_t* info_handle = m_pInfoHandle;
+	xfsinfo_handle_t* info_handle = GetInfoHandle();
 	libcerror_error_t** error = &m_pError;
+	try {
+		verifyHandle(info_handle);
+		fprintf(info_handle->notify_stream, "X File System information:\n\n");
+		fprintf(info_handle->notify_stream, "Volume information:\n");
 
-	if (info_handle == NULL)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-			"%s: invalid info handle.",
-			function);
-
-		return(-1);
-	}
-	fprintf(
-		info_handle->notify_stream,
-		"X File System information:\n\n");
-
-	fprintf(
-		info_handle->notify_stream,
-		"Volume information:\n");
-
-	if (libfsxfs_volume_get_format_version(
-		info_handle->input_volume,
-		&format_version,
-		error) != 1)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			"%s: unable to retrieve format version.",
-			function);
-
-		goto on_error;
-	}
-	fprintf(
-		info_handle->notify_stream,
-		"\tFormat version\t\t\t: %" PRIu8 "\n",
-		format_version);
-
-	fprintf(
-		info_handle->notify_stream,
-		"\tLabel\t\t\t\t: ");
-
-	result = getLabelSize(
-		info_handle->input_volume,
-		&value_string_size,
-		error);
-
-	if (result != 1)
-	{
-		libcerror_error_set(
-			error,
-			LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			"%s: unable to retrieve volume label size.",
-			function);
-
-		goto on_error;
-	}
-	if (value_string_size > 0)
-	{
-		value_string = system_string_allocate(
-			value_string_size);
-
-		if (value_string == NULL)
-		{
-			libcerror_error_set(
-				error,
-				LIBCERROR_ERROR_DOMAIN_MEMORY,
-				LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
-				"%s: unable to create volume label string.",
-				function);
-
-			goto on_error;
-		}
-		result = getLabel(
+		if (libfsxfs_volume_get_format_version(
 			info_handle->input_volume,
-			(uint16_t*)value_string,
-			value_string_size,
-			error);
-		if (result != 1)
+			&format_version,
+			error) != 1)
 		{
-			libcerror_error_set(
-				error,
-				LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				"%s: unable to retrieve volume label.",
-				function);
-
-			goto on_error;
+			throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_GET_FAILED, "unable to retrieve format version.");
 		}
 		fprintf(
 			info_handle->notify_stream,
-			"%" PRIs_SYSTEM "",
-			value_string);
+			"\tFormat version\t\t\t: %" PRIu8 "\n",
+			format_version);
 
-		memory_free(
-			value_string);
+		fprintf(info_handle->notify_stream, "\tLabel\t\t\t\t: ");
 
-		value_string = NULL;
+		result = getLabelSize(info_handle->input_volume, &value_string_size, error);
+
+		if (result != 1)
+			throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_GET_FAILED, "unable to retrieve volume label size.");
+
+		if (value_string_size > 0)
+		{
+			//value_string = system_string_allocate(value_string_size);
+			std::wstring value;
+			//value_string = (system_character_t*) value.data();
+			//if (value_string == NULL)
+			//	throw FDMemoryException(LIBCERROR_MEMORY_ERROR_INSUFFICIENT, "unable to create volume label string.");
+
+			result = getLabel(info_handle->input_volume, (uint16_t*)value.data()/*value_string*/, value_string_size, error);
+			if (result != 1)
+				throw FDRuntimeException(LIBCERROR_RUNTIME_ERROR_GET_FAILED, "unable to retrieve volume label.");
+
+			fprintf(info_handle->notify_stream, "%" PRIs_SYSTEM "", /*value_string*/value.c_str());
+
+			//memory_free(value_string);
+			//value_string = NULL;
+		}
+		fprintf(info_handle->notify_stream, "\n");
+
+		/* TODO print more info */
+
+		fprintf(info_handle->notify_stream, "\n");
+
+		return(1);
 	}
-	fprintf(
-		info_handle->notify_stream,
-		"\n");
-
-	/* TODO print more info */
-
-	fprintf(
-		info_handle->notify_stream,
-		"\n");
-
-	return(1);
-
-on_error:
-	if (value_string != NULL)
+	catch (FDXFSException& e)
 	{
-		memory_free(
-			value_string);
+		//if (value_string != NULL)
+		//	memory_free(value_string);
+
+		if (info_handle == NULL)
+		{
+			libcerror_error_set(
+				error,
+				LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+				e.code(),
+				"%s: %s",
+				function, e.what());
+
+			return(-1);
+		}
+		return(-1);
 	}
-	return(-1);
 }
 

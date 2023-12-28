@@ -36,7 +36,7 @@
 extern "C" {
 #endif
 	namespace FD_XFS {
-		static const char* fname = "xfs";
+		static const char* fname = "XFS";
 		static DWORDLONG dwlStartPageOfPartition = 0; // 파티션 데이터의 시작 위치 (1 Page = BytesPerSector bytes)
 		typedef std::map<std::string, struct xfs_blockdev*> XfsBlockDev;
 		typedef std::map<std::string, std::string> XfsDevName;

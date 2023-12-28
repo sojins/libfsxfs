@@ -4,14 +4,23 @@
 #include <iostream>
 #include "FDXFSHelper.h"
 
-int main()
+int wmain(int argc, const wchar_t* argv[])
 {
-    std::cout << "Hello World!\n";
+    setlocale(LC_ALL, "");
+
+    LPCTSTR filename = L"G:\\Evidences\\Dumps\\XFSDump\\xfs.raw";
+    if (argc > 1)
+        filename = argv[1];
 
     if (GetXFSHelper()->Initialize()) {
-        GetXFSHelper()->Open(L"G:\\Evidences\\Dumps\\XFSDump\\xfs_ubuntu.raw");
-        GetXFSHelper()->TestVolume();
-        GetXFSHelper()->DirTest();
-        GetXFSHelper()->Close();
+        
+        if (GetXFSHelper()->Mount(NULL, "xfs_mp"))
+        {
+            GetXFSHelper()->Open(filename);
+            //GetXFSHelper()->PrintVolumeInfo();
+            //GetXFSHelper()->Dir();
+            GetXFSHelper()->PrintHierarchy();
+            GetXFSHelper()->Close();
+        }
     }
 }
