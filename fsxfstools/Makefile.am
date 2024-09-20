@@ -1,6 +1,6 @@
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/common \
+	-I../include -I$(top_srcdir)/include \
+	-I../common -I$(top_srcdir)/common \
 	@LIBCERROR_CPPFLAGS@ \
 	@LIBCDATA_CPPFLAGS@ \
 	@LIBCLOCALE_CPPFLAGS@ \
@@ -82,7 +82,8 @@ fsxfsmount_SOURCES = \
 	mount_file_entry.c mount_file_entry.h \
 	mount_file_system.c mount_file_system.h \
 	mount_fuse.c mount_fuse.h \
-	mount_handle.c mount_handle.h
+	mount_handle.c mount_handle.h \
+	mount_path_string.c mount_path_string.h
 
 fsxfsmount_LDADD = \
 	@LIBFUSE_LIBADD@ \
@@ -98,13 +99,13 @@ fsxfsmount_LDADD = \
 	@LIBCERROR_LIBADD@ \
 	@LIBINTL@
 
-MAINTAINERCLEANFILES = \
+DISTCLEANFILES = \
+	Makefile \
 	Makefile.in
-
-distclean: clean
-	-rm -f Makefile
 
 splint-local:
 	@echo "Running splint on fsxfsinfo ..."
 	-splint -preproc -redef $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(fsxfsinfo_SOURCES)
+	@echo "Running splint on fsxfsmount ..."
+	-splint -preproc -redef $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(fsxfsmount_SOURCES)
 

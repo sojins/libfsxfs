@@ -1,7 +1,7 @@
 /*
  * Python object wrapper of libfsxfs_file_entry_t
  *
- * Copyright (C) 2020-2023, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2020-2024, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -205,14 +205,14 @@ PyMethodDef pyfsxfs_file_entry_object_methods[] = {
 	{ "read_buffer",
 	  (PyCFunction) pyfsxfs_file_entry_read_buffer,
 	  METH_VARARGS | METH_KEYWORDS,
-	  "read_buffer(size) -> Binary string\n"
+	  "read_buffer(size)-> Bytes\n"
 	  "\n"
 	  "Reads a buffer of data at the current offset." },
 
 	{ "read_buffer_at_offset",
 	  (PyCFunction) pyfsxfs_file_entry_read_buffer_at_offset,
 	  METH_VARARGS | METH_KEYWORDS,
-	  "read_buffer_at_offset(size, offset) -> Binary string\n"
+	  "read_buffer_at_offset(size, offset)-> Bytes\n"
 	  "\n"
 	  "Reads a buffer of data at a specific offset." },
 
@@ -233,7 +233,7 @@ PyMethodDef pyfsxfs_file_entry_object_methods[] = {
 	{ "read",
 	  (PyCFunction) pyfsxfs_file_entry_read_buffer,
 	  METH_VARARGS | METH_KEYWORDS,
-	  "read(size) -> Binary string\n"
+	  "read(size)-> Bytes\n"
 	  "\n"
 	  "Reads a buffer of data at the current offset." },
 
