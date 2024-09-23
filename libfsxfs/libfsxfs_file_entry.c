@@ -1855,6 +1855,7 @@ int libfsxfs_file_entry_get_utf8_symbolic_link_target(
 	return( result );
 }
 
+// [FINALDATA] by Kate; it's referenced from info_handle.c libfsxfs_file_entry_get_utf8_symbolic_link_target_size()
 /* Retrieves the size of the UTF-16 encoded symbolic link target
  * The size should include the end of string character
  * Returns 1 if successful, 0 if not available or -1 on error
@@ -1950,6 +1951,7 @@ int libfsxfs_file_entry_get_utf16_symbolic_link_target_size(
 	return(result);
 }
 
+// [FINALDATA] by Kate; it's referenced from info_handle.c libfsxfs_file_entry_get_utf8_symbolic_link_target_size()
 /* Retrieves the UTF-16 encoded symbolic link target
  * The size should include the end of string character
  * Returns 1 if successful, 0 if not available or -1 on error
@@ -3255,6 +3257,8 @@ int libfsxfs_file_entry_get_sub_file_entry_by_index(
  */
 int libfsxfs_file_entry_get_sub_file_entry_by_utf8_name(
      libfsxfs_file_entry_t *file_entry,
+     const uint8_t *utf8_string,
+     size_t utf8_string_length,
      libfsxfs_file_entry_t **sub_file_entry,
      libcerror_error_t **error )
 {
@@ -3338,6 +3342,8 @@ int libfsxfs_file_entry_get_sub_file_entry_by_utf8_name(
  */
 int libfsxfs_file_entry_get_sub_file_entry_by_utf16_name(
      libfsxfs_file_entry_t *file_entry,
+     const uint16_t *utf16_string,
+     size_t utf16_string_length,
      libfsxfs_file_entry_t **sub_file_entry,
      libcerror_error_t **error )
 {
